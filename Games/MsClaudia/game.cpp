@@ -1,6 +1,6 @@
 // $(C) Copyright by TheByteCave Inc., 2025 All Rights Reserved. $
 // $Creator: Dagon Meister $
-// $File: C:\projects\cpplearning-solutions\code\MSPacMan\game.cpp $
+// $File: C:\projects\cpplearning-solutions\code\MSClaudia\game.cpp $
 
 #include <windows.h>
 #include <cmath>
@@ -398,7 +398,7 @@ class SoundSystem {
 
 class Game {
     public:
-    Vec2 pacman;
+    Vec2 claudia;
     int pacDir;
     int nextDir;
     Ghost ghosts[4];
@@ -543,7 +543,7 @@ class Game {
     }
     
     void reset() {
-        pacman = {13.0f, 23.0f};
+        claudia = {13.0f, 23.0f};
         pacDir = 0;
         nextDir = 0;
         score = 0;
@@ -620,7 +620,7 @@ class Game {
         if (slowMotionTimer > 0) slowMotionTimer--;
         
         // Update camera to follow player with critically damped spring smoothing
-        float playerScreenY = pacman.y * TILE_SIZE + TILE_SIZE / 2.0f;
+        float playerScreenY = claudia.y * TILE_SIZE + TILE_SIZE / 2.0f;
         targetCameraY = playerScreenY - VIEWPORT_HEIGHT / 2.0f;
         
         // Clamp target camera to valid range
@@ -646,8 +646,8 @@ class Game {
         
         pacAnimFrame = (frameCount / 4) % 2;
         
-        int currentTileX = (int)pacman.x;
-        int currentTileY = (int)pacman.y;
+        int currentTileX = (int)claudia.x;
+        int currentTileY = (int)claudia.y;
         
         int dx[] = {1, 0, -1, 0};
         int dy[] = {0, 1, 0, -1};
@@ -714,8 +714,8 @@ class Game {
             
             if (pacSubPixel >= 1.0f) {
                 pacSubPixel = 0;
-                pacman.x = targetTileX;
-                pacman.y = targetTileY;
+                claudia.x = targetTileX;
+                claudia.y = targetTileY;
             }
         } else {
             // Mouth closes when not moving
@@ -797,8 +797,8 @@ class Game {
         
         // Check collisions
         for (int i = 0; i < 4; i++) {
-            float renderX = pacman.x + dx[pacDir] * pacSubPixel;
-            float renderY = pacman.y + dy[pacDir] * pacSubPixel;
+            float renderX = claudia.x + dx[pacDir] * pacSubPixel;
+            float renderY = claudia.y + dy[pacDir] * pacSubPixel;
             float dist = sqrt(pow(renderX - ghosts[i].pos.x, 2) + pow(renderY - ghosts[i].pos.y, 2));
             if (dist < 0.5f) {
                 if (ghosts[i].mode == 2) {
@@ -822,7 +822,7 @@ class Game {
                         gameOver = true;
                     } else {
                         Sleep(500);
-                        pacman = {13.0f, 23.0f};
+                        claudia = {13.0f, 23.0f};
                         pacSubPixel = 0;
                         for (int j = 0; j < 4; j++) {
                             ghosts[j].pos = (j == 0) ? Vec2{13.0f, 11.0f} : Vec2{13.0f, 14.0f};
@@ -865,15 +865,15 @@ class Game {
             switch (g.color) {
                 case 0: // BLINKY (Red) - The Shadow/Aggressor
                 // Directly targets Ms. Pac-Man's current tile
-                g.target = pacman;
+                g.target = claudia;
                 break;
                 
                 case 1: // PINKY (Pink) - The Ambusher
                 // Targets 2-4 tiles ahead of Ms. Pac-Man to cut her off
                 {
                     int tilesAhead = 3; // Target 3 tiles ahead
-                    g.target.x = pacman.x + dx[pacDir] * tilesAhead;
-                    g.target.y = pacman.y + dy[pacDir] * tilesAhead;
+                    g.target.x = claudia.x + dx[pacDir] * tilesAhead;
+                    g.target.y = claudia.y + dy[pacDir] * tilesAhead;
                     
                     // Add slight randomization for Ms. Pac-Man style unpredictability
                     if (frameCount % 60 < 30) {
@@ -890,8 +890,8 @@ class Game {
                     Vec2 blinkyPos = ghosts[0].pos;
                     
                     // Calculate point 2 tiles ahead of Ms. Pac-Man
-                    float intermediateX = pacman.x + dx[pacDir] * 2;
-                    float intermediateY = pacman.y + dy[pacDir] * 2;
+                    float intermediateX = claudia.x + dx[pacDir] * 2;
+                    float intermediateY = claudia.y + dy[pacDir] * 2;
                     
                     // Create vector from Blinky to intermediate point
                     float vectorX = intermediateX - blinkyPos.x;
@@ -912,11 +912,11 @@ class Game {
                 case 3: // SUE/CLYDE (Orange/Purple) - The Erratic One
                 // Approaches when far, retreats to scatter corner when close
                 {
-                    float distToPacman = sqrt(pow(g.pos.x - pacman.x, 2) + pow(g.pos.y - pacman.y, 2));
+                    float distToClaudia = sqrt(pow(g.pos.x - claudia.x, 2) + pow(g.pos.y - claudia.y, 2));
                     
                     // If more than 8 tiles away, chase Ms. Pac-Man
-                    if (distToPacman > 8.0f) {
-                        g.target = pacman;
+                    if (distToClaudia > 8.0f) {
+                        g.target = claudia;
                         
                         // Add randomization when chasing
                         if (frameCount % 30 < 10) {
@@ -1014,7 +1014,7 @@ class Game {
     }
     
     void resetLevel() {
-        pacman = {13.0f, 23.0f};
+        claudia = {13.0f, 23.0f};
         pacSubPixel = 0;
         pacDir = 0;
         nextDir = 0;
@@ -1061,7 +1061,7 @@ void DrawCircle(HDC hdc, int x, int y, int radius, COLORREF color) {
     DeleteObject(pen);
 }
 
-void DrawPacman(HDC hdc, int x, int y, int dir, int mouthOpen) {
+void DrawClaudia(HDC hdc, int x, int y, int dir, int mouthOpen) {
     COLORREF yellow = RGB(255, 255, 0);
     COLORREF red = RGB(255, 0, 0);
     
@@ -1332,15 +1332,15 @@ void Render(HDC hdc) {
         }
     }
     
-    // Draw pacman with camera offset
+    // Draw claudia with camera offset
     int dx[] = {1, 0, -1, 0};
     int dy[] = {0, 1, 0, -1};
-    float renderX = game.pacman.x + dx[game.pacDir] * game.pacSubPixel;
-    float renderY = game.pacman.y + dy[game.pacDir] * game.pacSubPixel;
+    float renderX = game.claudia.x + dx[game.pacDir] * game.pacSubPixel;
+    float renderY = game.claudia.y + dy[game.pacDir] * game.pacSubPixel;
     
     int px = (int)(renderX * TILE_SIZE + TILE_SIZE / 2);
     int py = (int)roundf(renderY * TILE_SIZE + TILE_SIZE / 2 - game.cameraY);
-    DrawPacman(hdc, px, py, game.pacDir, game.pacMouthOpen);
+    DrawClaudia(hdc, px, py, game.pacDir, game.pacMouthOpen);
     
     // Draw fruit if active
     if (game.fruit.active) {
@@ -1471,14 +1471,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     freopen_s(&consoleOut, "CONOUT$", "w", stdout);
     freopen_s(&consoleOut, "CONOUT$", "w", stderr);
     
-    printf("MS-PACMAN Debug Console\n");
+    printf("MS-CLAUDIA Debug Console\n");
     printf("=======================\n");
     printf("CHEAT CODES:\n");
     printf("  N - Skip to next level\n");
     printf("  M - Toggle sound mute\n");
     printf("=======================\n\n");
     
-    const char CLASS_NAME[] = "MSPacManWindow";
+    const char CLASS_NAME[] = "MSClaudia-Window";
     
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowProc;
@@ -1491,7 +1491,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     RegisterClass(&wc);
     
     hwnd = CreateWindowEx(
-                          0, CLASS_NAME, "MS-PACMAN",
+                          0, CLASS_NAME, "MS-CLAUDIA",
                           WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
                           CW_USEDEFAULT, CW_USEDEFAULT,
                           SCREEN_WIDTH + 16, VIEWPORT_HEIGHT + 39,
