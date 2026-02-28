@@ -1,9 +1,7 @@
 # Bare Metal to AI-driven
 
-A time stamp about the quality and performance within the game development driven by LLMs.
+A time stamp about the quality and performance of AI-driven code in game development.
 It was 2025 when we started experimenting and embracing multiple AI-driven tools in my formal work for multiple game-related projects.
-
-
 
 ## Failed experiments (2025)
 
