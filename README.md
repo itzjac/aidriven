@@ -8,7 +8,7 @@ It was 2025 when we started experimenting and embracing multiple AI-driven tools
 On-device LLMs, privacy, speech to speech, restricted content... there were some of the
 requirements and assumptions that were on the table for an educational mobile app.
 
-A few of the models we tested with n
+A few of the models we tested 
 
  * Llama 3.2
  * gemma2.2
@@ -17,10 +17,7 @@ A few of the models we tested with n
  * Maxrosoft Azure AI Speech
  * Unity Sentis
  * Vost
-
-Moving forward a year later, these specific requirements now read more like the rule than the exception
-for any of the LLMs that wants become future proof.
-
+ * 
 
 ## Complete games
 
@@ -43,7 +40,7 @@ The Nerd Stats:
  - Basic SFX, VFX included!
  - Ironically. really bad ghost AI!
 
-You can try the game your self [here](Games/MsClaudia/README.md).
+You can try review the code [here](Games/MsClaudia/README.md) or play the game [v1.0 release](releases/tag/v1.0).
 
 Now the real problem, 100% sure what comes next is the norm out there is social media: polishing.
 
