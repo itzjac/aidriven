@@ -1,3 +1,10 @@
+
+# Compilation
+Any version for Windows x64 as it used the GDI32
+
+`cl ..\\game.cpp -EHa -O2 user32.lib gdi32.lib winmm.lib`
+
+
 # Controls
 
  ## Keyboard
@@ -13,6 +20,7 @@
 
 
 <img width="667" height="799" alt="image" src="https://github.com/user-attachments/assets/88a9981e-3566-44b5-b860-ca03d4868a2c" />
+
 
 
 
