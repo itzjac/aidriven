@@ -46,7 +46,7 @@ The Nerd Stats:
  - Basic SFX, VFX included!
  - Ironically. really bad ghost AI!
 
-You can try the game your self [here](aidriven/Games/MsClaudia/README.md).
+You can try the game your self [here](Games/MsClaudia/README.md).
 
 Now the real problem, 100% sure what comes next is the norm out there is social media: polishing.
 
