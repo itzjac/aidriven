@@ -15,7 +15,6 @@ A few of the models we tested with n
  * whisper
  * gpt-40
  * Maxrosoft Azure AI Speech
- * Keen ASR
  * Unity Sentis
  * Vost
 
