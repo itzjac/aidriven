@@ -52,7 +52,7 @@ I spent considerable amount of hours trying to improve the in-game AI, no succes
  - Not understanding instructions
 
 Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve.
-It doesn't end here, we will be performing the same and more challenging projects with a Claude premium.
+It doesn't end here, we will be performing the same and more challenging projects with portability in mind: Linux, iOS and Windows.
 
 
 
