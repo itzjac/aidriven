@@ -1,6 +1,6 @@
-// $(C) Copyright by TheByteCave Inc., 2025 All Rights Reserved. $
+// $(C) Copyright by TheByteCave Inc., 2026 All Rights Reserved. $
 // $Creator: Dagon Meister $
-// $File: C:\projects\cpplearning-solutions\code\MSClaudia\game.cpp $
+// $File: C:\projects\aidriven\games\MSClaudia\game.cpp $
 
 #include <windows.h>
 #include <cmath>
