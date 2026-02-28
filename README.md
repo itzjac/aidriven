@@ -32,7 +32,7 @@ Upfront I want to be clear, we have a complete functional game prototype, still 
 
 The types of classic game clones ranging from Pong, Ms. PacMan, Mario Bros and increasing difficulty. 
 
-### MS. PacMan
+### MS. Claudia (Ms. Pac-Man Clone)
 
 Requirements
 C/C++, no external libraries, no sprites, pure code
