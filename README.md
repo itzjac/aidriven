@@ -29,7 +29,9 @@ Check out MS. Claudia (a MS Pac-Man clone) code [here](Games/MsClaudia/README.md
 
 ## State of the art with AI-driven code 2026
 
-100% sure what comes next is the norm out there is social media: polishing.
+100% sure you have read what is the worst part of using AI-driven code: polishing.
+
+Almost any social media has this problem mentioned by different professionals and veterans in the industry.
 
 I spent considerable amount of hours trying to improve the in-game AI, no success.
 The model:
@@ -39,9 +41,7 @@ The model:
  - Breaking unrelated parts of the game
  - Not understanding instructions
 
-Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve.
-It doesn't end here, we will be performing the same and more challenging projects with portability in mind: Linux, iOS and Windows.
-
+We want to continue with the more complex cloned games, including OS potability, a premium LLM susbciption (if that makes a difference at all).
 
 
 
