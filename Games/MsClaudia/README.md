@@ -1,4 +1,4 @@
-Introducing Ms. Claudia, a fully functional clone of Ms. Pac-Man
+Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
 
 # Requirements
 
@@ -59,6 +59,7 @@ The model:
 Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve. 
 
 It doesn't end here, we will be performing the same and more challenging game clones with portability in mind: Linux, iOS and Windows.
+
 
 
 
