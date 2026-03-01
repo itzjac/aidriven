@@ -33,10 +33,10 @@ Compiler: Visual Studio 2022 (possibly any previous version)
 
  - N: cheat and go to next level
 
-<img width="1338" height="921" alt="image" src="https://github.com/user-attachments/assets/61108770-7c31-46b6-b581-e19a04c15738" />
+<img width="669" height="460" alt="image" src="https://github.com/user-attachments/assets/61108770-7c31-46b6-b581-e19a04c15738" />
 
 
-<img width="667" height="799" alt="image" src="https://github.com/user-attachments/assets/88a9981e-3566-44b5-b860-ca03d4868a2c" />
+<img width="333" height="399" alt="image" src="https://github.com/user-attachments/assets/88a9981e-3566-44b5-b860-ca03d4868a2c" />
 
 # AI-Driven code
 
@@ -57,6 +57,7 @@ The model:
 Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve. 
 
 It doesn't end here, we will be performing the same and more challenging game clones with portability in mind: Linux, iOS and Windows.
+
 
 
 
