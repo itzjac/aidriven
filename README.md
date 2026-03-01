@@ -17,7 +17,6 @@ A few of the models we tested
  * Maxrosoft Azure AI Speech
  * Unity Sentis
  * Vost
- * 
 
 ## Complete games
 
