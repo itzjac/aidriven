@@ -1,3 +1,5 @@
+Introducing Ms. Claudia, a fully functional clone of Ms. Pac-Man
+
 # Requirements
 
 C/C++, no external libraries, no sprites, pure code
@@ -17,7 +19,7 @@ Compiler: Visual Studio 2022 (possibly any previous version)
  ## Keyboard
 
 
- - UP, DOWN, LEFT, RIGHT ARROW: Ms Claude movement
+ - UP, DOWN, LEFT, RIGHT ARROW: Ms. Claudia movement
 
  - M: Mute
 
@@ -40,7 +42,7 @@ Compiler: Visual Studio 2022 (possibly any previous version)
 
 # AI-Driven code Roadmap
 
-As mentioned there are two big issues to get the MS. Claudia to a polish phase: in-game AI, maze data.
+As mentioned there are two big issues to get the Ms. Claudia to a polish phase: in-game AI, maze data.
 
 
 I spent considerable amount of hours trying to improve the in-game AI and trying to 
@@ -57,6 +59,7 @@ The model:
 Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve. 
 
 It doesn't end here, we will be performing the same and more challenging game clones with portability in mind: Linux, iOS and Windows.
+
 
 
 
