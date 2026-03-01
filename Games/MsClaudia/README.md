@@ -17,7 +17,9 @@ C/C++, no external libraries, no sprites, pure code
 # Compilation
 
 Platform: Windows x64 (as it used the GDI32)
+
 Compiler: Visual Studio 2022 (possibly any previous version)
+
 
 `cl game.cpp -EHa -O2 user32.lib gdi32.lib winmm.lib`
 
@@ -37,6 +39,7 @@ Compiler: Visual Studio 2022 (possibly any previous version)
 
 
 <img width="667" height="799" alt="image" src="https://github.com/user-attachments/assets/88a9981e-3566-44b5-b860-ca03d4868a2c" />
+
 
 
 
