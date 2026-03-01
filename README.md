@@ -25,25 +25,14 @@ Upfront I want to be clear, we have a complete functional game prototype, still 
 
 The types of classic game clones ranging from Pong, Ms. PacMan, Mario Bros and increasing difficulty. 
 
-### MS. Claudia (Ms. Pac-Man Clone)
+Check out MS. Claudia (a MS Pac-Man clone) code [here](Games/MsClaudia/README.md) or play the game [v1.0 release](https://github.com/itzjac/aidriven/releases/tag/v1.0).
 
-Requirements
-C/C++, no external libraries, no sprites, pure code
+## State of the art with AI-driven code 2026
 
-The Nerd Stats:
- - ~1hr to reach a functional prototype.
- - Iterations: ~20 prompts to reach this stage.
- - Output: 1,000 lines of maintainable (ok-ish) code.
- - Tech Stack: Claude arbitrarily chose GDI rendering—it’s modular enough to swap easily.
- - The Catch: The level of detail required in prompting is extreme. You still need to know how to build to guide the AI.
- - Basic SFX, VFX included!
- - Ironically. really bad ghost AI!
-
-You can try review the code [here](Games/MsClaudia/README.md) or play the game [v1.0 release](https://github.com/itzjac/aidriven/releases/tag/v1.0).
-
-Now the real problem, 100% sure what comes next is the norm out there is social media: polishing.
+100% sure what comes next is the norm out there is social media: polishing.
 
 I spent considerable amount of hours trying to improve the in-game AI, no success.
+The model:
  - Kept repeating same mistakes over and over
  - Reverting existant code with new solutions
  - Redoing previous work
