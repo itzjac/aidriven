@@ -5,6 +5,7 @@ Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
 
 # Requirements
 
+Claude 3.5 Sonnet (free version Feb-2026)
 C/C++, no external libraries, no sprites, pure code
 
 # Compilation
@@ -62,6 +63,7 @@ The model:
 Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve. 
 
 It doesn't end here, we will be performing the same and more challenging game clones with portability in mind: Linux, iOS and Windows.
+
 
 
 
