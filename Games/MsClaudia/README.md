@@ -1,5 +1,8 @@
 Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
 
+<img width="283" height="252" alt="image" src="https://github.com/user-attachments/assets/7381379c-1a92-48e3-b22c-730925412df3" />
+
+
 # Requirements
 
 C/C++, no external libraries, no sprites, pure code
@@ -59,6 +62,7 @@ The model:
 Want to stress how ironic is that the in-game AI was still the biggest challenge for the LLM to solve. 
 
 It doesn't end here, we will be performing the same and more challenging game clones with portability in mind: Linux, iOS and Windows.
+
 
 
 
