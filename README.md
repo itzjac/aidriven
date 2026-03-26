@@ -21,7 +21,7 @@ A few of the models we tested
 ## Complete games
 
 2026 I started experimented with Claude 3.5 Sonnet (free version) with real challenges:  building complete and classic game clones. 
-Upfront I want to be clear, we have a complete functional game prototype, still far from a complete and enjoyable product.
+Upfront I want to be clear, we have a functional game prototype, still far from a complete and enjoyable product.
 
 The types of classic game clones ranging from Pong, Ms. PacMan, Mario Bros and increasing difficulty. 
 
