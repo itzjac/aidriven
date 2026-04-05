@@ -5,7 +5,9 @@ set CommonCompilerFlags=-MTd -D_CRT_SECURE_NO_WARNINGS -nologo -Gm- -GR- -EHa -O
 
 set CommonLinkerFlags= -MACHINE:X64 -incremental:no -opt:ref  Shell32.lib user32.lib gdi32.lib winmm.lib
 
-rc resource.rc 
+IF NOT EXIST "build\" mkdir build
+PUSHD build
+rc /fo resource.res ..\\resource.rc 
 
 echo %CommonCompilerFlags% | findstr /I /C:"/O2" /C:"-O2"  >nul
 if %errorlevel%==0 (
@@ -20,4 +22,5 @@ if %errorlevel%==0 (
 
 
 if exist *.obj del *.obj
-cl %CommonCompilerFlags% %EXTRA_DEFS% game.cpp loader.cpp resource.res /link /SUBSYSTEM:WINDOWS /LIBPATH:..\\lib %CommonLinkerFlags% /OUT:%OUT_NAME%
+cl %CommonCompilerFlags% %EXTRA_DEFS% ..\\game.cpp ..\\loader.cpp resource.res /link /SUBSYSTEM:WINDOWS /LIBPATH:..\\lib %CommonLinkerFlags% /OUT:%OUT_NAME%
+POPD build

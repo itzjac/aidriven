@@ -7,6 +7,7 @@
 #include <ctime>
 #include <vector>
 #include <mmsystem.h>
+#include "resource.h"
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "gdi32.lib")
 #pragma comment(lib, "msimg32.lib")
@@ -1281,6 +1282,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = CLASS_NAME;
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MSCLAUDIA_ICON));
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
     wc.style = CS_OWNDC;

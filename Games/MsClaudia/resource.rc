@@ -4,5 +4,5 @@
 
 #include "resource.h"
 
-IDI_TBC_PATHTRACER_ICON icon   "resources\\msclaudia.ico"
+IDI_MSCLAUDIA_ICON icon   "resources\\msclaudia.ico"
 IDB_SPLASH_IMAGE BITMAP "resources\\splash.bmp"
