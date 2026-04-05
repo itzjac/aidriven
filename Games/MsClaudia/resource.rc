@@ -1,0 +1,8 @@
+// $(C) Copyright by TheByteCave Inc., 2025 All Rights Reserved. $
+// $Creator: Dagon Meister $
+// $File: C:\projects\raytracer\code\resource.rc $
+
+#include "resource.h"
+
+IDI_TBC_PATHTRACER_ICON icon   "resources\\msclaudia.ico"
+IDB_SPLASH_IMAGE BITMAP "resources\\splash.bmp"
