@@ -5,4 +5,3 @@
 #include "resource.h"
 
 IDI_MSCLAUDIA_ICON icon   "resources\\msclaudia.ico"
-IDB_SPLASH_IMAGE BITMAP "resources\\splash.bmp"
