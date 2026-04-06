@@ -46,6 +46,8 @@ struct Fruit {
     float speed;
     int lifetime;
     int startY; // Y position where fruit enters
+    int dir;        // current movement direction (0=right,1=down,2=left,3=up)
+    float subPixel; // sub-tile movement progress
 };
 
 
@@ -242,6 +244,7 @@ class Game {
     
     // Game Over
     bool waitingForRestart;
+    bool paused;
     
     // Cheat codes
     void completeLevel() {
@@ -326,6 +329,7 @@ class Game {
         powerTimer = 0;
         level = 1;
         gameOver = false;
+        paused = false;
         frameCount = 0;
         modeTimer = 0;
         currentMode = 1;
@@ -346,7 +350,13 @@ class Game {
         ghosts[2] = {{13.0f, 14.0f}, {27.0f, 31.0f}, 3, 4, 2, {27.0f, 31.0f},0, 0, 0.0f, 0};
         ghosts[3] = {{15.0f, 14.0f}, {0.0f, 31.0f},  3, 4, 3, {0.0f, 31.0f}, 0, 0, 0.0f, 0};
         penAllGhosts();
-        
+
+        // Fruit system init
+        fruit.active = false;
+        fruitsSpawnedThisLevel = 0;
+        fruitSpawnTimer = 11250; // First fruit at 1:30 (90s * 125 FPS)
+        fruitBonusScore = 100;   // Cherry = 100 points
+
         countDots();
     }
     
@@ -406,7 +416,8 @@ class Game {
             waitingForRestart = true;
             return;
         }
-        
+        if (paused) return;
+
         frameCount++;
         
         // Update FPS counter
@@ -606,11 +617,11 @@ class Game {
         
         // Spawn fruit if timer reached and less than 2 fruits spawned this level
         if (fruitSpawnTimer <= 0 && !fruit.active && fruitsSpawnedThisLevel < 2) {
-            //spawnFruit(); // TODO(isaveg)
+            spawnFruit();
         }
-        
+
         if (fruit.active) {
-            // updateFruit(); // TODO(dagon)
+            updateFruit();
         }
         
         // Check collisions
@@ -842,13 +853,93 @@ class Game {
         }
     }
     
+    void spawnFruit() {
+        fruit.active = true;
+        fruit.type = FRUIT_CHERRY;
+        fruit.speed = 0.08f;
+        fruit.subPixel = 0;
+        fruit.direction = rand() % 2; // random side
+        if (fruit.direction == 0) {
+            // Enter from left tunnel
+            fruit.pos = {0.0f, 14.0f};
+            fruit.dir = 0; // moving right
+        } else {
+            // Enter from right tunnel
+            fruit.pos = {27.0f, 14.0f};
+            fruit.dir = 2; // moving left
+        }
+        fruitsSpawnedThisLevel++;
+        // Set timer for second fruit: 30 more seconds (2:00 - 1:30)
+        fruitSpawnTimer = 3750; // 30s * 125 FPS
+    }
+
+    void updateFruit() {
+        int currentTileX = (int)fruit.pos.x;
+        int currentTileY = (int)fruit.pos.y;
+
+        // Target: opposite tunnel entrance on row 14
+        float targetX = (fruit.direction == 0) ? 27.0f : 0.0f;
+        float targetY = 14.0f;
+
+        // Check if fruit reached the opposite tunnel — deactivate
+        if ((fruit.direction == 0 && currentTileX >= MAP_WIDTH - 1) ||
+            (fruit.direction == 1 && currentTileX <= 0)) {
+            fruit.active = false;
+            return;
+        }
+
+        // Check collision with Ms. Claudia
+        float dx0 = claudia.x - fruit.pos.x;
+        float dy0 = claudia.y - fruit.pos.y;
+        if (dx0 * dx0 + dy0 * dy0 < 0.64f) { // ~0.8 tile distance
+            score += fruitBonusScore;
+            fruit.active = false;
+            return;
+        }
+
+        // Navigate maze toward target (like ghost pathfinding, no reversals)
+        int ddx[] = {1, 0, -1, 0};
+        int ddy[] = {0, 1, 0, -1};
+
+        bool atCenter = (fruit.subPixel == 0);
+        if (atCenter) {
+            int bestDir = fruit.dir;
+            float bestDist = 999999;
+            for (int d = 0; d < 4; d++) {
+                if (d == (fruit.dir + 2) % 4) continue; // no reversals
+                int nx = currentTileX + ddx[d];
+                int ny = currentTileY + ddy[d];
+                if (nx < 0) nx = MAP_WIDTH - 1;
+                if (nx >= MAP_WIDTH) nx = 0;
+                if (!canMovePlayer(nx, ny)) continue;
+                float dist = abs(nx - targetX) + abs(ny - targetY);
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestDir = d;
+                }
+            }
+            fruit.dir = bestDir;
+        }
+
+        fruit.subPixel += fruit.speed;
+        if (fruit.subPixel >= 1.0f) {
+            fruit.subPixel = 0;
+            int newX = currentTileX + ddx[fruit.dir];
+            int newY = currentTileY + ddy[fruit.dir];
+            if (newX < 0) newX = MAP_WIDTH - 1;
+            if (newX >= MAP_WIDTH) newX = 0;
+            fruit.pos.x = (float)newX;
+            fruit.pos.y = (float)newY;
+        }
+    }
+
     void resetLevel() {
         claudia = {13.0f, 23.0f};
         pacSubPixel = 0;
         pacDir = 0;
         nextDir = 0;
         penAllGhosts();
-        
+
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
                 if (gameMap[y][x] == 0 && y != 14) {
@@ -859,6 +950,11 @@ class Game {
         gameMap[3][1] = gameMap[3][26] = 3;
         gameMap[23][1] = gameMap[23][26] = 3;
         countDots();
+
+        // Reset fruit for new level
+        fruit.active = false;
+        fruitsSpawnedThisLevel = 0;
+        fruitSpawnTimer = 11250; // First fruit at 1:30
     }
 };
 
@@ -958,6 +1054,7 @@ void DrawClaudia(HDC hdc, int x, int y, int dir, int mouthOpen) {
         DeleteObject(lipPen);
     }
     
+
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
@@ -970,29 +1067,44 @@ void DrawClaudia(HDC hdc, int x, int y, int dir, int mouthOpen) {
     SelectObject(hdc, bowBrush);
     SelectObject(hdc, bowPen);
     
-    // Bow position - on top/back of head, rotates with direction
+    // Bow position - on back of head, perpendicular to face direction.
+    // Right/Left: bow at top (y-16), slight X offset behind face. Loops horizontal.
+    // Up/Down: bow at left side (x-16), slight Y offset behind face. Loops vertical.
+    //   dir=3 (up) is reference for vertical; dir=1 (down) is its Y-mirror.
     int bowX = 0, bowY = 0;
     switch(dir) {
-        case 0: bowX = x - 5;  bowY = y - 16; break; // Right: bow top-left
-        case 1: bowX = x - 5;  bowY = y - 16; break; // Down: bow on top (back of head)
-        case 2: bowX = x + 5;  bowY = y - 16; break; // Left: bow top-right (mirrored)
-        case 3: bowX = x - 5;  bowY = y + 16; break; // Up: bow on bottom (back of head)
+        case 0: bowX = x - 12;  bowY = y - 16; break; // Right: bow top-left
+        case 1: bowX = x - 16; bowY = y - 12;  break; // Down: bow left side, slightly behind face
+        case 2: bowX = x + 12;  bowY = y - 16; break; // Left: bow top-right (mirrored)
+        case 3: bowX = x - 16; bowY = y + 12;  break; // Up: bow left side, slightly behind face (Y-mirror of dir=1)
     }
 
-    // Bow loops are horizontal for left/right/down, vertical for up
-    POINT loopA[4], loopB[4];
-    if (dir == 3) {
-        // Up: bow at bottom, loops spread horizontally, offset downward
-        loopA[0] = {bowX - 8, bowY};     loopA[1] = {bowX - 3, bowY - 4};
-        loopA[2] = {bowX - 3, bowY + 4}; loopA[3] = {bowX - 8, bowY};
-        loopB[0] = {bowX + 8, bowY};     loopB[1] = {bowX + 3, bowY - 4};
-        loopB[2] = {bowX + 3, bowY + 4}; loopB[3] = {bowX + 8, bowY};
+    // Bow loops: ±20° tilt, 20% bigger (spread=13, width=7).
+    // Right/Up use -20°, Left/Down use +20° (mirrored pairs).
+    float bowDeg = (dir == 0 || dir == 3) ? -25.0f : 25.0f;
+    float bowAngle = bowDeg * 3.14159265f / 180.0f;
+    float bc = cosf(bowAngle), bs = sinf(bowAngle);
+
+    // Base offsets from bow center (before rotation):
+    //   Horizontal (right/left): loopA tip=(-13,0), ctrl=(-5,∓7); loopB tip=(+13,0), ctrl=(+5,∓7)
+    //   Vertical   (up/down):    loopA tip=(0,-13), ctrl=(∓7,-5); loopB tip=(0,+13), ctrl=(∓7,+5)
+    int baseA[4][2], baseB[4][2];
+    if (dir == 1 || dir == 3) {
+        int tA[4][2] = {{0,-13},{-7,-5},{+7,-5},{0,-13}};
+        int tB[4][2] = {{0,+13},{-7,+5},{+7,+5},{0,+13}};
+        for (int i=0;i<4;i++) { baseA[i][0]=tA[i][0]; baseA[i][1]=tA[i][1]; baseB[i][0]=tB[i][0]; baseB[i][1]=tB[i][1]; }
     } else {
-        // Right/Down/Left: bow on top, loops spread horizontally
-        loopA[0] = {bowX - 8, bowY};     loopA[1] = {bowX - 3, bowY - 4};
-        loopA[2] = {bowX - 3, bowY + 4}; loopA[3] = {bowX - 8, bowY};
-        loopB[0] = {bowX + 8, bowY};     loopB[1] = {bowX + 3, bowY - 4};
-        loopB[2] = {bowX + 3, bowY + 4}; loopB[3] = {bowX + 8, bowY};
+        int tA[4][2] = {{-13,0},{-5,-7},{-5,+7},{-13,0}};
+        int tB[4][2] = {{+13,0},{+5,-7},{+5,+7},{+13,0}};
+        for (int i=0;i<4;i++) { baseA[i][0]=tA[i][0]; baseA[i][1]=tA[i][1]; baseB[i][0]=tB[i][0]; baseB[i][1]=tB[i][1]; }
+    }
+
+    POINT loopA[4], loopB[4];
+    for (int i = 0; i < 4; i++) {
+        loopA[i] = {bowX + (int)(baseA[i][0]*bc - baseA[i][1]*bs),
+                    bowY + (int)(baseA[i][0]*bs + baseA[i][1]*bc)};
+        loopB[i] = {bowX + (int)(baseB[i][0]*bc - baseB[i][1]*bs),
+                    bowY + (int)(baseB[i][0]*bs + baseB[i][1]*bc)};
     }
     Polygon(hdc, loopA, 4);
     Polygon(hdc, loopB, 4);
@@ -1004,6 +1116,62 @@ void DrawClaudia(HDC hdc, int x, int y, int dir, int mouthOpen) {
     SelectObject(hdc, oldPen);
     DeleteObject(bowBrush);
     DeleteObject(bowPen);
+
+    // Eye: near the "upper lip" mouth corner for each direction, pulled ~60% toward center.
+    // Beauty mark: near the "lower lip" mouth corner for each direction, pulled slightly inward.
+    // mouth corners per direction:
+    //   dir=0: upper=(+14,-10), lower=(+14,+10)
+    //   dir=1: upper=(+10,+14), lower=(-10,+14)  [face at bottom]
+    //   dir=2: upper=(-14,-10), lower=(-14,+10)  [mirror of dir=0 — eye stays at screen top]
+    //   dir=3: upper=(-10,-14), lower=(+10,-14)  [face at top]
+    int eyeX, eyeY;
+    switch(dir) {
+        case 0: eyeX = x + 8;  eyeY = y - 10; break; // near upper lip, pulled in
+        case 1: eyeX = x - 8;  eyeY = y + 8;  break; // mirror of dir=3 (Y-flip), eye stays on left side
+        case 2: eyeX = x - 8;  eyeY = y - 10; break; // mirror of dir=0 — eye stays at screen top
+        case 3: eyeX = x - 8;  eyeY = y - 8;  break; // near upper lip (left side), pulled in
+        default: eyeX = x + 8; eyeY = y - 10; break;
+    }
+
+    int bmX, bmY;
+    switch(dir) {
+        case 0: bmX = x; bmY = y + 2;  break; // near lower lip, pulled back toward center
+        case 1: bmX = x + 2;  bmY = y; break; // mirror of dir=3 (Y-flip), mark stays on right side
+        case 2: bmX = x; bmY = y + 2;  break; // mirror of dir=0 — mark stays at screen bottom
+        case 3: bmX = x + 2;  bmY = y; break; // near lower lip (right side)
+        default: bmX = x + 10; bmY = y + 8; break;
+    }
+
+    // Beauty mark: filled black dot (radius 3)
+    {
+        HBRUSH bmBrush = CreateSolidBrush(RGB(0, 0, 0));
+        HPEN bmPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+        HBRUSH prevBmBrush = (HBRUSH)SelectObject(hdc, bmBrush);
+        HPEN prevBmPen = (HPEN)SelectObject(hdc, bmPen);
+        Ellipse(hdc, bmX - 3, bmY - 3, bmX + 3, bmY + 3);
+        SelectObject(hdc, prevBmBrush);
+        SelectObject(hdc, prevBmPen);
+        DeleteObject(bmBrush);
+        DeleteObject(bmPen);
+    }
+
+    // Eye: thick bezier arc. Horizontal for left/right, vertical (90° rotated) for up/down.
+    // Horizontal offsets: (-6,0),(-2,-1),(+2,-1),(+6,0)
+    // Vertical offsets:   (0,-6),(-1,-2),(-1,+2),(0,+6)  — same shape rotated 90°
+    {
+        int hBase[4][2] = {{-6,0},{-2,-1},{+2,-1},{+6,0}};
+        int vBase[4][2] = {{0,-6},{-1,-2},{-1,+2},{0,+6}};
+        int (*base)[2] = (dir == 1 || dir == 3) ? vBase : hBase;
+        POINT eyePts[4];
+        for (int i = 0; i < 4; i++) {
+            eyePts[i] = {eyeX + base[i][0], eyeY + base[i][1]};
+        }
+        HPEN eyePen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+        HPEN prevEyePen = (HPEN)SelectObject(hdc, eyePen);
+        PolyBezier(hdc, eyePts, 4);
+        SelectObject(hdc, prevEyePen);
+        DeleteObject(eyePen);
+    }
 }
 
 void DrawGhost(HDC hdc, int x, int y, int color, int mode, int frame) {
@@ -1061,42 +1229,59 @@ void DrawGhost(HDC hdc, int x, int y, int color, int mode, int frame) {
 }
 
 void DrawFruit(HDC hdc, int x, int y, int type) {
-    // Different colors for each fruit
-    COLORREF fruitColors[] = {
-        RGB(255, 0, 0),     // Cherry - red
-        RGB(255, 0, 127),   // Strawberry - pink/red
-        RGB(200, 255, 0),   // Pear - yellow-green
-        RGB(255, 0, 0),     // Apple - red
-        RGB(255, 165, 0),   // Orange - orange
-        RGB(255, 255, 0)    // Banana - yellow
-    };
-    
-    HBRUSH brush = CreateSolidBrush(fruitColors[type]);
-    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-    HPEN pen = CreatePen(PS_SOLID, 2, fruitColors[type]);
-    HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-    
-    // Draw simple fruit shape (circle with stem)
-    Ellipse(hdc, x - 12, y - 12, x + 12, y + 12);
-    
-    // Draw stem (green line on top)
-    HPEN stemPen = CreatePen(PS_SOLID, 3, RGB(0, 180, 0));
-    SelectObject(hdc, stemPen);
-    MoveToEx(hdc, x, y - 12, NULL);
-    LineTo(hdc, x, y - 18);
-    
-    // Add leaf
-    POINT leaf[3];
-    leaf[0] = {x, y - 18};
-    leaf[1] = {x + 6, y - 15};
-    leaf[2] = {x, y - 14};
-    Polygon(hdc, leaf, 3);
-    
+    // Cherry pair: two red circles with green stems meeting at a common point
+
+    // Stems — green curved lines from each cherry to a common top point
+    HPEN stemPen = CreatePen(PS_SOLID, 2, RGB(0, 160, 0));
+    HPEN oldPen = (HPEN)SelectObject(hdc, stemPen);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+
+    // Left stem: bezier from left cherry top to meeting point
+    POINT stemL[4] = {{x - 7, y - 2}, {x - 6, y - 10}, {x - 2, y - 16}, {x + 1, y - 18}};
+    PolyBezier(hdc, stemL, 4);
+    // Right stem: bezier from right cherry top to meeting point
+    POINT stemR[4] = {{x + 7, y - 2}, {x + 8, y - 8}, {x + 4, y - 14}, {x + 1, y - 18}};
+    PolyBezier(hdc, stemR, 4);
+
+    SelectObject(hdc, oldPen);
+    DeleteObject(stemPen);
+
+    // Leaf at the top of the stems
+    HBRUSH leafBrush = CreateSolidBrush(RGB(0, 180, 0));
+    HPEN leafPen = CreatePen(PS_SOLID, 1, RGB(0, 140, 0));
+    SelectObject(hdc, leafBrush);
+    SelectObject(hdc, leafPen);
+    POINT leaf[4] = {{x + 1, y - 18}, {x + 8, y - 22}, {x + 12, y - 18}, {x + 5, y - 16}};
+    Polygon(hdc, leaf, 4);
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
-    DeleteObject(brush);
-    DeleteObject(pen);
-    DeleteObject(stemPen);
+    DeleteObject(leafBrush);
+    DeleteObject(leafPen);
+
+    // Left cherry (red circle)
+    HBRUSH cherryBrush = CreateSolidBrush(RGB(220, 0, 0));
+    HPEN cherryPen = CreatePen(PS_SOLID, 1, RGB(180, 0, 0));
+    SelectObject(hdc, cherryBrush);
+    SelectObject(hdc, cherryPen);
+    Ellipse(hdc, x - 14, y - 6, x, y + 8);
+
+    // Right cherry (red circle, slightly offset)
+    Ellipse(hdc, x, y - 4, x + 14, y + 10);
+
+    // Highlights on each cherry (small white arc)
+    HBRUSH highlightBrush = CreateSolidBrush(RGB(255, 180, 180));
+    HPEN highlightPen = CreatePen(PS_SOLID, 1, RGB(255, 180, 180));
+    SelectObject(hdc, highlightBrush);
+    SelectObject(hdc, highlightPen);
+    Ellipse(hdc, x - 10, y - 3, x - 6, y + 1);
+    Ellipse(hdc, x + 4, y - 1, x + 8, y + 3);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(cherryBrush);
+    DeleteObject(cherryPen);
+    DeleteObject(highlightBrush);
+    DeleteObject(highlightPen);
 }
 
 void Render(HDC hdc) {
@@ -1304,6 +1489,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         else if (wParam == 'M') {
             // Toggle sound mute (M for "Mute")
             game.sound.toggleSound();
+        }
+        else if (wParam == 'F') {
+            // Spawn fruit immediately (F for "Fruit")
+            if (!game.fruit.active) {
+                game.spawnFruit();
+            }
+        }
+        else if (wParam == 'P') {
+            // Toggle pause (P for "Pause")
+            game.paused = !game.paused;
         }
         return 0;
     }
