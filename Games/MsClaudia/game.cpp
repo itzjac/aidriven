@@ -459,12 +459,19 @@ class Game {
         isMoving = false;
 
         // Immediate reversal: always allowed mid-tile (you came from there)
-        if (nextDir == (pacDir + 2) % 4) {
+        if (nextDir == (pacDir + 2) % 4 && pacSubPixel > 0) {
+            // Move claudia to the tile we were heading toward, then reverse from there
+            // This keeps the visual position identical: old (pos + oldDir*sub) == new (newPos + newDir*newSub)
+            int fwdX = currentTileX + dx[pacDir];
+            int fwdY = currentTileY + dy[pacDir];
+            if (fwdX < 0) fwdX = MAP_WIDTH - 1;
+            if (fwdX >= MAP_WIDTH) fwdX = 0;
+            claudia.x = (float)fwdX;
+            claudia.y = (float)fwdY;
+            pacSubPixel = 1.0f - pacSubPixel;
             pacDir = nextDir;
-            pacSubPixel = 1.0f - pacSubPixel; // Flip progress to go back
-            // Recalculate current tile after reversal
-            currentTileX = (int)claudia.x;
-            currentTileY = (int)claudia.y;
+            currentTileX = fwdX;
+            currentTileY = fwdY;
         }
         // Perpendicular or same-direction turn: try at tile center
         else if (centered) {
