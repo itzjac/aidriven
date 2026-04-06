@@ -1,0 +1,4 @@
+# Ignore files list
+build/
+.vs
+intermediate/
