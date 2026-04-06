@@ -7,7 +7,8 @@ Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
 
 # Requirements
 
-Claude 3.5 Sonnet (free version Feb-2026)
+v1.0 Claude 3.5 Sonnet (free version Feb-2026)
+v1.1 Claude Opus 4.6 (Pro version Apr-2026)
 C/C++, no external libraries, no sprites, pure code
 
 # Compilation
