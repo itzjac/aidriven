@@ -4,6 +4,7 @@ Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
 
 <img width="327" height="323" alt="image" src="https://github.com/user-attachments/assets/4b4dd9d0-0c53-481b-bed3-97b246a131f3" />
 
+<img width="299" height="251" alt="image" src="https://github.com/user-attachments/assets/6d3f9ae1-8af2-4356-9278-d6809a7ac60d" />
 
 # Requirements
 
