@@ -25,7 +25,7 @@ Upfront I want to be clear, we have a functional game prototype, still far from 
 
 The types of classic game clones ranging from Pong, Ms. PacMan, Mario Bros and increasing difficulty. 
 
-Check out Ms. Claudia (a MS Pac-Man clone) code [here](Games/MsClaudia/README.md) or play the game [v1.1 release](https://github.com/itzjac/aidriven/releases/tag/v1.2).
+Check out Ms. Claudia (a MS Pac-Man clone) code [here](Games/MsClaudia/README.md) or play the game [v1.2 release](https://github.com/itzjac/aidriven/releases/tag/v1.2).
 
 ## State of the art with AI-driven code 2026
 
