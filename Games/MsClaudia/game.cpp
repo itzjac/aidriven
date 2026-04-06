@@ -196,6 +196,15 @@ class SoundSystem {
         playToneAsync(200, 50, 70);
         LeaveCriticalSection(&cs);
     }
+
+    void playFruitBlob() {
+        EnterCriticalSection(&cs);
+        // Low-frequency "blob" — deep sub-bass pulse.
+        // Duration matches the fruit's bob cycle (105 frames * 10ms = 1050ms)
+        // so sequential calls overlap seamlessly and the tone is constant.
+        playToneAsync(90, 1050, 50);
+        LeaveCriticalSection(&cs);
+    }
 };
 
 class Game {
@@ -354,7 +363,8 @@ class Game {
         // Fruit system init
         fruit.active = false;
         fruitsSpawnedThisLevel = 0;
-        fruitSpawnTimer = 11250; // First fruit at 1:30 (90s * 125 FPS)
+        // First fruit: random 50-70s at 100 FPS = 5000-7000 frames
+        fruitSpawnTimer = 4000 + (rand() % 1001);
         fruitBonusScore = 100;   // Cherry = 100 points
 
         countDots();
@@ -445,7 +455,7 @@ class Game {
         
         // Critically damped spring for ultra-smooth camera (no oscillation)
         float smoothTime = 0.15f; // Lower = snappier, higher = smoother
-        float maxSpeed = 1000.0f;
+        float maxSpeed = 800.0f;
         float deltaTime = 1.0f / 125.0f; // Target frame time
         
         // Smooth damp algorithm
@@ -530,7 +540,7 @@ class Game {
         
         if (canMovePlayer(targetTileX, targetTileY)) {
             // Two half-steps per frame for smoother movement (same overall speed)
-            float speedMultiplier = (slowMotionTimer > 0) ? 0.3f : 1.0f;
+            float speedMultiplier = (slowMotionTimer > 0) ? 0.3f : 0.8f;
             float step = 0.0625f * speedMultiplier;
             for (int s = 0; s < 2; s++) {
                 pacSubPixel += step;
@@ -614,12 +624,21 @@ class Game {
         
         // Update fruit
         fruitSpawnTimer--;
-        
-        // Spawn fruit if timer reached and less than 2 fruits spawned this level
-        if (fruitSpawnTimer <= 0 && !fruit.active && fruitsSpawnedThisLevel < 2) {
-            spawnFruit();
+
+        // Debug: log fruit state every 500 frames
+        if (frameCount % 500 == 0) {
+            printf("[FRUIT DEBUG] frame=%d timer=%d active=%d spawned=%d\n",
+                   frameCount, fruitSpawnTimer, fruit.active, fruitsSpawnedThisLevel);
+            fflush(stdout);
         }
 
+        // Spawn fruit if timer reached and less than 2 fruits spawned this level
+        if (fruitSpawnTimer <= 0 && !fruit.active && fruitsSpawnedThisLevel < 2) {
+            printf("[FRUIT] Auto-spawning fruit at frame %d\n", frameCount);
+            fflush(stdout);
+            spawnFruit();
+        }
+        
         if (fruit.active) {
             updateFruit();
         }
@@ -649,6 +668,7 @@ class Game {
                         Sleep(500);
                         claudia = {13.0f, 23.0f};
                         pacSubPixel = 0;
+                        fruit.active = false;
                         penAllGhosts();
                     }
                 }
@@ -830,7 +850,7 @@ class Game {
             g.dir = bestDir;
         }
         
-        float speed = (g.mode == 3) ? 0.25f : (g.mode == 2) ? 0.0625f : 0.125f;
+        float speed = (g.mode == 3) ? 0.5f : (g.mode == 2) ? 0.0625f : 0.112f;
         g.subPixel += speed;
         
         if (g.subPixel >= 1.0f) {
@@ -856,8 +876,9 @@ class Game {
     void spawnFruit() {
         fruit.active = true;
         fruit.type = FRUIT_CHERRY;
-        fruit.speed = 0.08f;
+        fruit.speed = 0.05f;
         fruit.subPixel = 0;
+        fruit.lifetime = 0; // bob phase counter
         fruit.direction = rand() % 2; // random side
         if (fruit.direction == 0) {
             // Enter from left tunnel
@@ -869,11 +890,19 @@ class Game {
             fruit.dir = 2; // moving left
         }
         fruitsSpawnedThisLevel++;
-        // Set timer for second fruit: 30 more seconds (2:00 - 1:30)
-        fruitSpawnTimer = 3750; // 30s * 125 FPS
+        // Second fruit: random 35-60s after this one at 100 FPS = 3500-6000 frames
+        fruitSpawnTimer = 3000 + (rand() % 2501);
     }
 
     void updateFruit() {
+        // Advance bob phase, and play a low cyclic blob sound once per bob cycle.
+        // Bob period = ~105 frames (~0.84s at 125 FPS).
+        if (fruit.lifetime % 30 == 0) {
+            sound.playFruitBlob();
+            fruit.lifetime = 0;
+        }
+        fruit.lifetime++;
+
         int currentTileX = (int)fruit.pos.x;
         int currentTileY = (int)fruit.pos.y;
 
@@ -897,12 +926,16 @@ class Game {
             return;
         }
 
-        // Navigate maze toward target (like ghost pathfinding, no reversals)
+        // Navigate maze with wandering behavior (no reversals).
+        // At intersections, sometimes pick a non-greedy direction so the
+        // path takes a few turns instead of going straight to the tunnel.
         int ddx[] = {1, 0, -1, 0};
         int ddy[] = {0, 1, 0, -1};
 
         bool atCenter = (fruit.subPixel == 0);
         if (atCenter) {
+            int validDirs[4];
+            int validCount = 0;
             int bestDir = fruit.dir;
             float bestDist = 999999;
             for (int d = 0; d < 4; d++) {
@@ -912,13 +945,23 @@ class Game {
                 if (nx < 0) nx = MAP_WIDTH - 1;
                 if (nx >= MAP_WIDTH) nx = 0;
                 if (!canMovePlayer(nx, ny)) continue;
+                validDirs[validCount++] = d;
                 float dist = abs(nx - targetX) + abs(ny - targetY);
                 if (dist < bestDist) {
                     bestDist = dist;
                     bestDir = d;
                 }
             }
-            fruit.dir = bestDir;
+            if (validCount == 0) {
+                // Dead end — allow reverse
+                fruit.dir = (fruit.dir + 2) % 4;
+            } else if (validCount >= 2 && (rand() % 100) < 55) {
+                // Wander: at a real intersection, 55% chance to pick a random
+                // valid direction (which may be the greedy one anyway).
+                fruit.dir = validDirs[rand() % validCount];
+            } else {
+                fruit.dir = bestDir;
+            }
         }
 
         fruit.subPixel += fruit.speed;
@@ -954,7 +997,8 @@ class Game {
         // Reset fruit for new level
         fruit.active = false;
         fruitsSpawnedThisLevel = 0;
-        fruitSpawnTimer = 11250; // First fruit at 1:30
+        // First fruit: random 50-70s at 100 FPS = 5000-7000 frames
+        fruitSpawnTimer = 2500 + (rand() % 1000);
     }
 };
 
@@ -1378,9 +1422,16 @@ void Render(HDC hdc) {
     
     // Draw fruit if active
     if (game.fruit.active) {
-        int fx = (int)(game.fruit.pos.x * TILE_SIZE + TILE_SIZE / 2);
-        int fy = (int)roundf(game.fruit.pos.y * TILE_SIZE + TILE_SIZE / 2 - game.cameraY);
-        
+        float frX = game.fruit.pos.x + dx[game.fruit.dir] * game.fruit.subPixel;
+        float frY = game.fruit.pos.y + dy[game.fruit.dir] * game.fruit.subPixel;
+        int fx = (int)(frX * TILE_SIZE + TILE_SIZE / 2);
+        int fy = (int)roundf(frY * TILE_SIZE + TILE_SIZE / 2 - game.cameraY);
+
+        // Bobbing: sin wave synced with the blob sound cycle (~0.84s).
+        // 2π / 105 ≈ 0.0598 rad/frame; amplitude 6px.
+        float bobOffset = sinf(game.fruit.lifetime * 0.0598f) * 6.0f;
+        fy += (int)bobOffset;
+
         // Only draw if visible
         if (fy > -50 && fy < VIEWPORT_HEIGHT + 50) {
             DrawFruit(hdc, fx, fy, game.fruit.type);
@@ -1566,7 +1617,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
         }
         
         DWORD currentTime = GetTickCount();
-        if (currentTime - lastTime >= 8) { // 8ms per frame = ~125 FPS
+        if (currentTime - lastTime >= 10) { // 12ms per frame = ~100 FPS
             game.update();
             
             // Render to back buffer
