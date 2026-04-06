@@ -2,6 +2,8 @@ Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
 
 <img width="283" height="252" alt="image" src="https://github.com/user-attachments/assets/7381379c-1a92-48e3-b22c-730925412df3" />
 
+<img width="327" height="323" alt="image" src="https://github.com/user-attachments/assets/4b4dd9d0-0c53-481b-bed3-97b246a131f3" />
+
 
 # Requirements
 
@@ -64,9 +66,21 @@ Want to stress how ironic is that the in-game AI was still the biggest challenge
 
 It doesn't end here, we will be performing the same and more challenging game clones with portability in mind: Linux, iOS and Windows.
 
+## April 2026 
+[Release v1.1](https://github.com/itzjac/aidriven/releases/tag/v1.1) is now ready and includes Red Lipstick. We upgraded the  requirements to Claude Code Pro subscription
+ - Opus 4.6 
+ - Effort High
+ - Thinking
+   
+Through this model settings the game is now more stable, has a more consolidated code to improve and find errors.
+We spent around ~3hrs going through the fixes and also including all the features mentioned in the release notes.
 
-
-
+The free model basically is not capable of starting deep analysis on simple games, it requires to access the more powerful models.
+With these specs:
+ - Breaking down the code base into modules seemed to be more effective 
+ - "Pay to play model" as you run out of tokens
+ - Code efficiency and readability is decent and maintenable
+ - 473Kb executable (included with a pre-built resource .ico file)
 
 
 
