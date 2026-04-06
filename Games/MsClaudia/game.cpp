@@ -59,12 +59,13 @@ struct Ghost {
     Vec2 pos;
     Vec2 target;
     int dir;
-    int mode;
+    int mode;       // 0=scatter, 1=chase, 2=frightened, 3=returning, 4=penned
     int color;
     Vec2 scatterTarget;
     int frightenedTimer;
     int animFrame;
     float subPixel;
+    int penTimer;   // Frames until released from ghost house
 };
 
 // Improved Sound system - NO Beep, only wave generation with proper completion
@@ -340,14 +341,40 @@ class Game {
         targetCameraY = 0.0f;
         cameraSmoothVelocity = 0.0f;
         
-        ghosts[0] = {{13.0f, 11.0f}, {25.0f, 0.0f}, 2, 1, 0, {25.0f, 0.0f}, 0, 0, 0.0f};
-        ghosts[1] = {{11.0f, 14.0f}, {2.0f, 0.0f}, 0, 1, 1, {2.0f, 0.0f}, 0, 0, 0.0f};
-        ghosts[2] = {{13.0f, 14.0f}, {27.0f, 31.0f}, 0, 1, 2, {27.0f, 31.0f}, 0, 0, 0.0f};
-        ghosts[3] = {{15.0f, 14.0f}, {0.0f, 31.0f}, 2, 1, 3, {0.0f, 31.0f}, 0, 0, 0.0f};
+        ghosts[0] = {{13.0f, 11.0f}, {25.0f, 0.0f}, 2, 1, 0, {25.0f, 0.0f}, 0, 0, 0.0f, 0};
+        ghosts[1] = {{11.0f, 14.0f}, {2.0f, 0.0f},  3, 4, 1, {2.0f, 0.0f},  0, 0, 0.0f, 0};
+        ghosts[2] = {{13.0f, 14.0f}, {27.0f, 31.0f}, 3, 4, 2, {27.0f, 31.0f},0, 0, 0.0f, 0};
+        ghosts[3] = {{15.0f, 14.0f}, {0.0f, 31.0f},  3, 4, 3, {0.0f, 31.0f}, 0, 0, 0.0f, 0};
+        penAllGhosts();
         
         countDots();
     }
     
+    // Put a single ghost back into the pen with a short release delay
+    void penGhost(int i, int delay) {
+        Vec2 homePos[] = {{13.0f, 11.0f}, {11.0f, 14.0f}, {13.0f, 14.0f}, {15.0f, 14.0f}};
+        ghosts[i].pos = homePos[i];
+        ghosts[i].subPixel = 0;
+        if (i == 0) {
+            // Blinky always starts outside the house
+            ghosts[i].mode = 1;
+            ghosts[i].dir = 2;
+            ghosts[i].penTimer = 0;
+        } else {
+            ghosts[i].mode = 4;
+            ghosts[i].dir = 3;
+            ghosts[i].penTimer = delay;
+        }
+        ghosts[i].frightenedTimer = 0;
+    }
+
+    void penAllGhosts() {
+        int penTimers[] = {0, 15, 90, 200};
+        for (int i = 0; i < 4; i++) {
+            penGhost(i, penTimers[i]);
+        }
+    }
+
     void countDots() {
         dots = 0;
         for (int y = 0; y < MAP_HEIGHT; y++) {
@@ -361,13 +388,15 @@ class Game {
     }
     
     bool canMove(int x, int y) {
-        if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return true;
+        if (y < 0 || y >= MAP_HEIGHT) return false;    // Block vertical escape
+        if (x < 0 || x >= MAP_WIDTH) return true;      // Allow horizontal tunnel wrap
         int tile = gameMap[y][x];
         return tile != 1;
     }
-    
+
     bool canMovePlayer(int x, int y) {
-        if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) return true;
+        if (y < 0 || y >= MAP_HEIGHT) return false;
+        if (x < 0 || x >= MAP_WIDTH) return true;
         int tile = gameMap[y][x];
         return tile != 1 && tile != 4;
     }
@@ -428,7 +457,26 @@ class Game {
         
         bool centered = (pacSubPixel == 0);
         isMoving = false;
-        
+
+        // Immediate reversal: always allowed mid-tile (you came from there)
+        if (nextDir == (pacDir + 2) % 4) {
+            pacDir = nextDir;
+            pacSubPixel = 1.0f - pacSubPixel; // Flip progress to go back
+            // Recalculate current tile after reversal
+            currentTileX = (int)claudia.x;
+            currentTileY = (int)claudia.y;
+        }
+        // Perpendicular or same-direction turn: try at tile center
+        else if (centered) {
+            int nextTileX = currentTileX + dx[nextDir];
+            int nextTileY = currentTileY + dy[nextDir];
+            if (nextTileX < 0) nextTileX = MAP_WIDTH - 1;
+            if (nextTileX >= MAP_WIDTH) nextTileX = 0;
+            if (canMovePlayer(nextTileX, nextTileY)) {
+                pacDir = nextDir;
+            }
+        }
+
         if (centered) {
             if (gameMap[currentTileY][currentTileX] == 2) {
                 gameMap[currentTileY][currentTileX] = 0;
@@ -448,22 +496,11 @@ class Game {
                 sound.playPowerPellet();
                 powerTimer = 300;
                 for (int i = 0; i < 4; i++) {
-                    if (ghosts[i].mode != 3) {
+                    if (ghosts[i].mode != 3 && ghosts[i].mode != 4) {
                         ghosts[i].mode = 2;
                         ghosts[i].frightenedTimer = 300;
-                        ghosts[i].dir = (ghosts[i].dir + 2) % 4;
                     }
                 }
-            }
-            
-            int nextTileX = currentTileX + dx[nextDir];
-            int nextTileY = currentTileY + dy[nextDir];
-            
-            if (nextTileX < 0) nextTileX = MAP_WIDTH - 1;
-            if (nextTileX >= MAP_WIDTH) nextTileX = 0;
-            
-            if (canMovePlayer(nextTileX, nextTileY)) {
-                pacDir = nextDir;
             }
         }
         
@@ -474,25 +511,25 @@ class Game {
         if (targetTileX >= MAP_WIDTH) targetTileX = 0;
         
         if (canMovePlayer(targetTileX, targetTileY)) {
-            // Apply slow motion to player movement too
+            // Two half-steps per frame for smoother movement (same overall speed)
             float speedMultiplier = (slowMotionTimer > 0) ? 0.3f : 1.0f;
-            pacSubPixel += 0.125f * speedMultiplier;
+            float step = 0.0625f * speedMultiplier;
+            for (int s = 0; s < 2; s++) {
+                pacSubPixel += step;
+                if (pacSubPixel >= 1.0f) {
+                    pacSubPixel = 0;
+                    claudia.x = (float)targetTileX;
+                    claudia.y = (float)targetTileY;
+                    break;
+                }
+            }
             isMoving = true;
-            
-            // Update mouth animation only when moving (slower rate - every 16 frames instead of 8)
             pacMouthOpen = (frameCount / 4) % 2;
-            
+
             if (frameCount % 8 == 0) {
                 sound.playWakaWaka(frameCount);
             }
-            
-            if (pacSubPixel >= 1.0f) {
-                pacSubPixel = 0;
-                claudia.x = targetTileX;
-                claudia.y = targetTileY;
-            }
         } else {
-            // Mouth closes when not moving
             pacMouthOpen = 0;
         }
         
@@ -579,17 +616,13 @@ class Game {
                     score += 200;
                     sound.playEatGhost();
                     ghosts[i].mode = 3;
-                    ghosts[i].target = {13.0f, 14.0f};
-                    // Force grid alignment when eaten
-                    ghosts[i].subPixel = 0;
-                    ghosts[i].pos.x = (float)(int)(ghosts[i].pos.x + 0.5f);
-                    ghosts[i].pos.y = (float)(int)(ghosts[i].pos.y + 0.5f);
-                    
+                    ghosts[i].target = {13.0f, 11.0f};
+
                     // Trigger visual effects
-                    ghostEatenFlash = 15; // Flash for 15 frames (reduced)
-                    slowMotionTimer = 60; // Slow motion for 60 frames (increased to ~480ms)
+                    ghostEatenFlash = 15;
+                    slowMotionTimer = 60;
                     ghostEatenPos = ghosts[i].pos;
-                } else if (ghosts[i].mode != 3) {
+                } else if (ghosts[i].mode != 3 && ghosts[i].mode != 4) {
                     lives--;
                     sound.playDeath();
                     if (lives <= 0) {
@@ -598,10 +631,7 @@ class Game {
                         Sleep(500);
                         claudia = {13.0f, 23.0f};
                         pacSubPixel = 0;
-                        for (int j = 0; j < 4; j++) {
-                            ghosts[j].pos = (j == 0) ? Vec2{13.0f, 11.0f} : Vec2{13.0f, 14.0f};
-                            ghosts[j].subPixel = 0;
-                        }
+                        penAllGhosts();
                     }
                 }
             }
@@ -614,14 +644,26 @@ class Game {
         
         if (g.frightenedTimer > 0) g.frightenedTimer--;
         
+        // Mode 4 = Penned in ghost house, waiting to be released
+        if (g.mode == 4) {
+            g.penTimer--;
+            if (g.penTimer <= 0) {
+                // Switch to chase/scatter — AI will navigate out through the door
+                g.mode = currentMode;
+                g.dir = 3; // Face up toward the exit
+            }
+            return;
+        }
+
         // Apply slow motion when ghost is eaten (even slower)
         if (slowMotionTimer > 0 && (frameCount % 4 != 0)) {
             return; // Skip 3 out of 4 frames for stronger slow motion effect
         }
-        
+
         // Mode 3 = Returning to ghost house after being eaten
+        // Target tile just above the door — ghost gets placed inside on arrival
         if (g.mode == 3) {
-            g.target = {13.0f, 14.0f};
+            g.target = {13.0f, 11.0f};
         } 
         // Mode 2 = Frightened (preserve original frightened logic)
         else if (g.mode == 2) {
@@ -716,7 +758,15 @@ class Game {
         
         int currentTileX = (int)g.pos.x;
         int currentTileY = (int)g.pos.y;
-        
+
+        // If ghost is inside the ghost house, override target to exit point
+        // so it navigates up through the door instead of toward the player
+        if (g.mode != 3 && currentTileX >= 0 && currentTileX < MAP_WIDTH
+            && currentTileY >= 0 && currentTileY < MAP_HEIGHT
+            && gameMap[currentTileY][currentTileX] == 4) {
+            g.target = {13.0f, 11.0f};
+        }
+
         int dx[] = {1, 0, -1, 0};
         int dy[] = {0, 1, 0, -1};
         
@@ -777,12 +827,10 @@ class Game {
             g.pos.y = newY;
         }
         
-        // Check if ghost has returned to ghost house
-        if (g.mode == 3) {
-            float dist = sqrt(pow(g.pos.x - 13.0f, 2) + pow(g.pos.y - 14.0f, 2));
-            if (dist < 0.5f && g.subPixel == 0) {
-                g.mode = currentMode;
-                g.subPixel = 0;
+        // Check if ghost has reached tile above the door
+        if (g.mode == 3 && g.subPixel == 0) {
+            if (currentTileX == 13 && currentTileY == 11) {
+                penGhost(g.color, 30);
             }
         }
     }
@@ -792,11 +840,7 @@ class Game {
         pacSubPixel = 0;
         pacDir = 0;
         nextDir = 0;
-        for (int i = 0; i < 4; i++) {
-            ghosts[i].pos = (i == 0) ? Vec2{13.0f, 11.0f} : Vec2{13.0f, 14.0f};
-            ghosts[i].mode = 1;
-            ghosts[i].subPixel = 0;
-        }
+        penAllGhosts();
         
         for (int y = 0; y < MAP_HEIGHT; y++) {
             for (int x = 0; x < MAP_WIDTH; x++) {
