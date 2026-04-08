@@ -1,4 +1,4 @@
-Introducing Ms. Claudia, a fully functional Ms. Pac-Man's clone
+Introducing Ms. Claudia, a fully procedurally generated and functional Ms. Pac-Man's clone
 
 <img width="283" height="252" alt="image" src="https://github.com/user-attachments/assets/7381379c-1a92-48e3-b22c-730925412df3" />
 
